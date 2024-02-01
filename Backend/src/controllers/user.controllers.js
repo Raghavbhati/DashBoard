@@ -1,8 +1,9 @@
 const { UserModel } = require("../models/user.models");
 
 const registerUser = async (req, res)=>{
-    const {companyName, sellerName, email, phone, password, addressLineOne, addressLineTwo, city, state, country, pincode} = req.body;
+    const {username,companyName, sellerName, email, phone, password, addressLineOne, addressLineTwo, city, state, country, pincode} = req.body;
     const user = {
+        username,
         companyName,
         sellerName,
         email,

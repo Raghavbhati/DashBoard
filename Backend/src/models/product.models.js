@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongooseAggregatePaginate = require("mongoose-aggregate-paginate-v2");
 
 const productSchema = new mongoose.Schema({
     "productName" : {
@@ -50,9 +51,18 @@ const productSchema = new mongoose.Schema({
         type : String,
         trim : true,
         required : true,
+    },
+    "seller" :{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "user"
     }
 },{
     timestamps : true,
 })
 
-export const ProductModel = mongoose.model("product", productSchema)
+productSchema.plugin(mongooseAggregatePaginate)
+
+
+const ProductModel = mongoose.model("Product", productSchema)
+
+module.exports = {ProductModel}
