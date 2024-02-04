@@ -39,15 +39,15 @@ const registerUser = async (req, res) => {
     throw new ApiError(400, "All fields are required");
   } 
 
-  // const existedUser = await UserModel.findOne({
-  //   $or: [{ username }, { email }],
-  // });
-  // if (existedUser) {
-  //   throw new ApiError(
-  //     409,
-  //     "Account already existed with this username or email"
-  //   );
-  // }
+  const existedUser = await UserModel.findOne({
+    $or: [{ username }, { email }],
+  });
+  if (existedUser) {
+    throw new ApiError(
+      409,
+      "Account already existed with this username or email"
+    );
+  }
 
   const image = req.files?.logo[0]?.path;
   console.log(image)

@@ -1,12 +1,11 @@
 const { v2: cloudinary } = require("cloudinary");
 const fs = require("node:fs");
-console.log(process.env.CLOUDINARY_NAME)
-console.log(process.env.CLOUDINARY_KEY)
-console.log(process.env.CLOUDINARY_SECRET)
+require("dotenv").config()
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
+  cloud_name: `${process.env.CLOUDINARY_NAME}`,
+  api_key: `${process.env.CLOUDINARY_KEY}`,
+  api_secret: `${process.env.CLOUDINARY_SECRET}`,
 });
 
 const uploadOnCloudinary = async (localPath)=>{
@@ -19,8 +18,8 @@ const uploadOnCloudinary = async (localPath)=>{
         return res;
     } catch (error) {
         console.error("Error uploading to Cloudinary:", error);
-        console.log("Image Deleted")
         fs.unlinkSync(localPath)
+        console.log("Image Deleted") 
         return null
     }
 }
