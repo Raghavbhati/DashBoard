@@ -7,7 +7,7 @@ const userRoute = express.Router();
 
 userRoute.post("/register", registerUser)
 userRoute.post("/login", loginUser)
-
+userRoute.post("/logout",authMiddleware, logoutUser)
 
 // userRoute.post("/register", upload.fields([{
 //     name: "logo", 

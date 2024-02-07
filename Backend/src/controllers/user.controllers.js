@@ -85,7 +85,7 @@ const loginUser = async (req, res) => {
   const loggedInUser = await UserModel.findById(user._id).select(
     "-password -refreshToken"
   );
-  
+
   try {
     const options = {
       httpOnly: true,
@@ -109,10 +109,9 @@ const loginUser = async (req, res) => {
 };
 
 const logoutUser = async (req, res) => {
-  const { user } = req.body;
   try {
     await UserModel.findByIdAndUpdate(
-      user._id,
+      req.user._id,
       {
         $unset: {
           refreshToken: 1, // this removes the field from document
@@ -151,7 +150,7 @@ const logoutUser = async (req, res) => {
 //     }
 //   } catch (error) {
 //     throw new ApiError(502, error);
-//     res.send(error)
-//   }
+//     res.send(error)  
+//   } 
 // };
 module.exports = { registerUser, loginUser, logoutUser };
