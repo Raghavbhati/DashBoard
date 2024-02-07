@@ -4,19 +4,34 @@ const { ApiResponse } = require("../utils/ApiResponse");
 const { upload } = require("../middlewares/multer.middleware");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
 
+const generateAccessAndRefereshTokens = async (userId) => {
+  try {
+    const user = await UserModel.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(500, "Unable to create token at this moment");
+  }
+};
+
 const registerUser = async (req, res) => {
-  const {username, email, password} = req.body;
+  const { username, email, password } = req.body;
   if (
-    [username, email, password].some(     
+    [username, email, password].some(
       (each) => typeof each === "string" && each.trim() === ""
     )
-  ) { 
+  ) {
     throw new ApiError(400, "All fields are required");
   }
 
   const existedUser = await UserModel.findOne({
     $or: [{ username }, { email }],
-  });  
+  });
   if (existedUser) {
     throw new ApiError(
       409,
@@ -46,12 +61,79 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
+  const { email, username, password } = req.body;
+  if (!email && !username) {
+    throw new ApiError(406, "Either Email or Username is required");
+  }
+  if (!password) {
+    throw new ApiError(406, "Password is required");
+  }
+  const user = await UserModel.findOne({
+    $or: [{ email }, { username }],
+  });
+  if (!user) {
+    throw new ApiError(404, "User Not Fount");
+  }
+
+  const isPasswordCorrect = await user.isPasswordCorrect(email, password);
+  if (!isPasswordCorrect) {
+    throw new ApiError(404, "Incorrect user credentials");
+  }
+
+
+  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
+  const loggedInUser = await UserModel.findById(user._id).select(
+    "-password -refreshToken"
+  );
+  
   try {
-    res.status(200).json({
-      message: "ok",
-    });
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { user: loggedInUser, accessToken, refreshToken },
+          "User Logged In Sucessfully"
+        )
+      );
   } catch (error) {
     throw new ApiError(502, error);
+  }
+};
+
+const logoutUser = async (req, res) => {
+  const { user } = req.body;
+  try {
+    await UserModel.findByIdAndUpdate(
+      user._id,
+      {
+        $unset: {
+          refreshToken: 1, // this removes the field from document
+        },
+      },
+      {
+        new: true,
+      }
+    );
+    
+    const options  = {
+      httpOnly : true,
+      secure :true,
+    }
+
+    return res.status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User Logged Out"))
+  } catch (error) {
+    throw new ApiError(500, "Unable to logout");
   }
 };
 
@@ -70,6 +152,6 @@ const loginUser = async (req, res) => {
 //   } catch (error) {
 //     throw new ApiError(502, error);
 //     res.send(error)
-//   } 
+//   }
 // };
-module.exports = { registerUser, loginUser };
+module.exports = { registerUser, loginUser, logoutUser };
