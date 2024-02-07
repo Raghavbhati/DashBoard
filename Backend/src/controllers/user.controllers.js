@@ -3,6 +3,8 @@ const { ApiError } = require("../utils/ApiError");
 const { ApiResponse } = require("../utils/ApiResponse");
 const { upload } = require("../middlewares/multer.middleware");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
+const jwt = require("jsonwebtoken");
+
 
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
@@ -136,6 +138,41 @@ const logoutUser = async (req, res) => {
   }
 };
 
+const updateToken = async (req, res)=>{
+
+  const IncomingrefreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+  if(!IncomingrefreshToken){
+    throw new ApiError(401, "Unauthorized request")
+  }
+  try {
+    const decode = jwt.verify(IncomingrefreshToken, process.env.REFRESH_TOKEN_SECRECT);
+    const user = await UserModel.findById(decode?._id);
+
+    if(!user){
+      throw new ApiError(401, "Invalid refresh token")
+    }
+    if(IncomingrefreshToken !== user.refreshToken){
+      throw new ApiError(401, "Token is expired")
+    }
+
+    const options = {
+      httpOnly : true,
+      secure : true
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
+    res.status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(
+      200,
+      {accessToken, refreshToken},
+      "Refreshtoken updated"
+    ))
+  } catch (error) {
+    throw new ApiError(401, "Invalid refresh token")
+  }
+}
 // const updateProfile = async (req, res) => {
 //   try {
 //     const image = req.files?.logo[0]?.path || "";
@@ -153,4 +190,4 @@ const logoutUser = async (req, res) => {
 //     res.send(error)  
 //   } 
 // };
-module.exports = { registerUser, loginUser, logoutUser };
+module.exports = { registerUser, loginUser, logoutUser, updateToken };
