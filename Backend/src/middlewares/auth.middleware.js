@@ -12,13 +12,13 @@ const authMiddleware = async (req, res, next)=>{
         const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         const user = await UserModel.findById(decode._id);
         if(!user){
-            throw new ApiError(401, "Invalid Access Token")
+            throw new ApiError(401, "Invalid AccessToken")
         }
         
         req.user = user;
         next()
     } catch (error) {
-        throw new ApiError(502, "Unable to verify the access token")
+        throw new ApiError(502, "Unable to  verify the access token")
     }
 }
 module.exports = {authMiddleware};
