@@ -14,5 +14,5 @@ connection()
     })
 })
 .catch((error)=>{
-    console.log("Mongo DB Connection Failed test", error)
+    console.log("Mongo DB Connection Failed", error)
 })
