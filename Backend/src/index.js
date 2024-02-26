@@ -1,9 +1,9 @@
 const { app } = require("./app");
 const { connection } = require("./db/db");
+require("dotenv").config({path:"../.env"})
 
-require("dotenv").config({path:"./.env"})
-const PORT = process.env.PORT || 8080;
- 
+const PORT = process.env.PORT;
+
 connection()
 .then(()=>{
     app.on('error', (error) => {

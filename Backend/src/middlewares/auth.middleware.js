@@ -10,7 +10,9 @@ const authMiddleware = async (req, res, next)=>{
         }
 
         const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        const user = await UserModel.findById(decode._id);
+        const user = await UserModel.findById(decode._id).select(
+            "-password -refreshToken"
+        );
         if(!user){
             throw new ApiError(401, "Invalid AccessToken")
         }
