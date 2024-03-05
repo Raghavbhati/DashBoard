@@ -19,3 +19,4 @@ userRoute.delete("/user-delete", authMiddleware, deleteAccount)
 // }]), registerUser)
 
 module.exports = {userRoute};
+ 

@@ -16,7 +16,7 @@ app.use(express.urlencoded({
 app.use(express.static("public"));
 app.use(cookieParser())
 
-app.get("/", (req, res)=>{
+app.get("/api/", (req, res)=>{
     try {
         res.send("Server is live.. Check API Docs")
     } catch (error) {
@@ -24,6 +24,6 @@ app.get("/", (req, res)=>{
     }
 })
 
-app.use("/user", userRoute)
+app.use("/api/user", userRoute)
 
 module.exports = {app}
