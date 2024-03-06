@@ -238,7 +238,7 @@ const updateUser = async (req, res) => {
 const updateImage = async (req, res) => {
   try {
   } catch (error) {}
-};
+}; 
 
 // const updateProfile = async (req, res) => {
 //   try {
