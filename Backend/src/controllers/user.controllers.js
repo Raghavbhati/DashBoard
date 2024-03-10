@@ -19,35 +19,34 @@ const generateAccessAndRefereshTokens = async (userId) => {
     throw new ApiError(500, "Unable to create token at this moment");
   }
 };
-
-const registerUser = async (req, res) => {
+ 
+const registerUser = async (req, res, next) => {
   const { username, email, password } = req.body;
-  if (!username) {
-    throw new ApiError(400, "Username is required");
-  }
-  if (!password) {
-    throw new ApiError(400, "Password is required");
-  }
-  if (!email) {
-    throw new ApiError(400, "Email is required");
-  }
-
-  const existedUser = await UserModel.findOne({
-    $or: [{ username }, { email }],
-  });
-  if (existedUser) {
-    throw new ApiError(
-      409,
-      "Account already existed with this username or email"
-    );
-  }
-  const user = {
-    username: username.toLowerCase(),
-    email,
-    password,
-  };
-
   try {
+    if (!username) {
+      throw new ApiError(400, "Username is required");
+    }
+    if (!password) {
+      throw new ApiError(400, "Password is required");
+    }
+    if (!email) {
+      throw new ApiError(400, "Email is required");
+    }
+  
+    const existedUser = await UserModel.findOne({
+      $or: [{ username }, { email }],
+    });
+    if (existedUser) {
+      throw new ApiError(
+        409,
+        "Account already existed with this username or email"
+      );
+    }
+    const user = {
+      username: username.toLowerCase(),
+      email,
+      password,
+    };
     const createUser = await UserModel.create(user);
 
     const createdUser = await UserModel.findById(createUser._id).select(
@@ -58,38 +57,38 @@ const registerUser = async (req, res) => {
     }
     res.status(201).json(new ApiResponse(200, createdUser, "User Created"));
   } catch (error) {
-    console.log("ERROR", error);
+    next(error);
   }
 };
 
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   const { email, username, password } = req.body;
-  if (!email && !username) {
-    throw new ApiError(406, "Either Email or Username is required");
-  }
-  if (!password) {
-    throw new ApiError(406, "Password is required");
-  }
-  const user = await UserModel.findOne({
-    $or: [{ email }, { username }],
-  });
-  if (!user) {
-    throw new ApiError(404, "User Not Fount");
-  }
-
-  const isPasswordCorrect = await user.isPasswordCorrect(email, password);
-  if (!isPasswordCorrect) {
-    throw new ApiError(404, "Incorrect user credentials");
-  }
-
-  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
-    user._id
-  );
-  const loggedInUser = await UserModel.findById(user._id).select(
-    "-password -refreshToken"
-  );
 
   try {
+    if (!email && !username) {
+      throw new ApiError(406, "Either Email or Username is required");
+    }
+    if (!password) {
+      throw new ApiError(406, "Password is required");
+    }
+    const user = await UserModel.findOne({
+      $or: [{ email }, { username }],
+    });
+    if (!user) {
+      throw new ApiError(404, "User Not Fount");
+    }
+  
+    const isPasswordCorrect = await user.isPasswordCorrect(email, password);
+    if (!isPasswordCorrect) {
+      throw new ApiError(404, "Incorrect user credentials");
+    }
+  
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+      user._id
+    );
+    const loggedInUser = await UserModel.findById(user._id).select(
+      "-password -refreshToken"
+    );
     const options = {
       httpOnly: true,
       secure: true,
@@ -107,7 +106,7 @@ const loginUser = async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(502, error);
+    next(error)
   }
 };
 

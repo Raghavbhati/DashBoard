@@ -5,10 +5,7 @@ const cookieParser = require("cookie-parser")
 const { userRoute } = require("./routes/user.routes");
 const app = express();
 
-app.use(cors({
-    origin : process.env.CORS_ORIGIN,
-    credentials : true
-}))
+app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({
     extended : true
@@ -26,4 +23,7 @@ app.get("/api/", (req, res)=>{
 
 app.use("/api/user", userRoute)
 
+app.use((err, req, res, next) => {
+    res.status(err.statusCode || 500).json(err);
+});
 module.exports = {app}
